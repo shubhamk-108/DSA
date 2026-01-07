@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "random": "cpp",
+        "8_findtwooddoccuringnumeffi": "cpp"
+    }
+}

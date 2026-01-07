@@ -1,0 +1,321 @@
+#include <iostream>
+using namespace std;
+
+struct MyCustomHash
+{
+    // Declare
+    int hashSlots;
+    int *hashTable;
+    int size;
+
+    // Initialise
+    MyCustomHash(int m)
+    {
+        hashSlots = m;
+        hashTable = new int[hashSlots];
+        size = 0;
+
+        for (int i = 0; i < hashSlots; i++)
+        {
+            hashTable[i] = -1;
+        }
+    }
+    ~MyCustomHash()
+    {
+        delete[] hashTable;
+    }
+
+    int hash(int key)
+    {
+        int h = key % hashSlots;
+        return h;
+    }
+
+    bool insert(int key)
+    {
+        if (size == hashSlots)
+            return false;
+
+        int i = hash(key);
+
+        while (hashTable[i] != -1 && hashTable[i] != -2 && hashTable[i] != key)
+        {
+            i = (i + 1) % hashSlots;
+        }
+        if (hashTable[i] == key)
+            return false;
+        else
+        {
+            hashTable[i] = key;
+            size++;
+            return true;
+        }
+        return false;
+    }
+
+    // i had below question while solving search function. Question listed after search function
+    bool search(int key)
+    {
+        int h = hash(key);
+        int i = h;
+
+        while (hashTable[i] != -1)
+        {
+            if (hashTable[i] == key)
+                return true;
+            else
+            {
+                i = (i + 1) % hashSlots;
+                if (i == h)
+                    return false;
+            }
+        }
+        return false;
+    }
+
+    // Question: suppose we got i as 3 and we have -1  from 6th index but our value is present at 1st index then we start from 3
+    // and we increment it by 1 and we saw -1 at 6 and loop stops. so this will give us wrong answer because we did not circle back
+    // and go to 1st index as we stopped when we saw -1 at index 6
+
+    // Answer: Because we know that for example if we want to search for 12 then if 12 gives us hash key as 3 then we know
+    // that 12 must be at 3rd index on onwards index because it is linear probing.
+    // And due to linear probing we know that if we encounter -1 that means all the slots after -1 are empty so no point checking there.
+
+    bool erase(int key)
+    {
+        int h = hash(key);
+        int i = h;
+
+        while (hashTable[i] != -1)
+        {
+            if (hashTable[i] == key)
+            {
+                hashTable[i] = -2;
+                return true;
+            }
+
+            else
+            {
+                i = (i + 1) % hashSlots;
+                if (i == h)
+                    return false;
+            }
+        }
+        return false;
+    }
+};
+
+int main()
+{
+    MyCustomHash mh(7);
+    mh.insert(49);
+    mh.insert(56);
+    mh.insert(72);
+    if (mh.search(56) == true)
+        cout << "Yes" << endl;
+    else
+        cout << "No" << endl;
+    mh.erase(56);
+    if (mh.search(56) == true)
+        cout << "Yes" << endl;
+    else
+        cout << "No" << endl;
+}
+
+
+// time and space :
+
+/*
+1. insert(key)
+
+Average Case: O(1)
+When the load factor is low and the hash function distributes keys uniformly, there are few collisions. An insertion will 
+likely find an empty slot on the first or second try, making the operation effectively constant time.
+
+Worst Case: O(n)
+This occurs when the table is nearly full or when primary clustering is severe. In the worst-case scenario, the insert function 
+might have to probe through all n existing elements to find a slot, leading to linear time complexity.
+
+2. search(key)
+
+Average Case: O(1)
+Similar to insertion, an average search will find the key or an empty slot very quickly, making it a constant time operation on
+ average.
+
+Worst Case: O(n)
+If the key is not in the table and the table is full (or has long clusters), the search will have to probe through all n elements
+ before concluding the key is absent.
+
+3. erase(key)
+
+Average Case: O(1)
+Finding the element to erase takes, on average, constant time.
+
+Worst Case: O(n)
+Just like search, if the table is clustered, finding the element to mark as deleted could require probing through every element 
+in the table.
+
+
+Space Complexity
+Space Complexity: O(m) or O(capacity)
+The space complexity is determined by the size of the underlying array (hashTable), which has a fixed capacity (hashSlots or m)
+
+*/
+
+
+// logic 
+
+/*
+
+
+#include <iostream>
+using namespace std;
+
+// A custom hash table implementation using open addressing with linear probing.
+struct MyCustomHash
+{
+    // --- Member Variables ---
+    int hashSlots;  // The maximum capacity of the hash table (number of slots).
+    int *hashTable; // A pointer to the dynamically allocated array that stores the keys.
+    int size;       // The current number of elements in the hash table.
+
+    // --- Constructor ---
+    // Initializes a new hash table with a given capacity 'm'.
+    MyCustomHash(int m)
+    {
+        // Set the capacity and initialize the current size to zero.
+        hashSlots = m;
+        size = 0;
+
+        // Allocate memory for the hash table array.
+        hashTable = new int[hashSlots];
+
+        // --- CRITICAL STEP: Initialize all slots ---
+        // Mark every slot as empty (-1). This is essential for the probing logic to work.
+        // -1: Represents an empty slot.
+        // -2: Represents a slot that was occupied but has been deleted.
+        for (int i = 0; i < hashSlots; i++)
+        {
+            hashTable[i] = -1;
+        }
+    }
+
+    // --- Destructor ---
+    // Cleans up the dynamically allocated memory when the object is destroyed.
+    ~MyCustomHash()
+    {
+        delete[] hashTable;
+    }
+
+    // --- Hash Function ---
+    // Computes the initial index for a given key using the simple division method.
+    int hash(int key)
+    {
+        return key % hashSlots;
+    }
+
+    // --- Insert Function ---
+    // Inserts a key into the hash table. Returns true on success, false on failure.
+    bool insert(int key)
+    {
+        // Fail if the hash table is already full.
+        if (size == hashSlots)
+            return false;
+
+        // Calculate the initial probe index.
+        int i = hash(key);
+
+        // --- Linear Probing to find a suitable slot ---
+        // Keep probing as long as the current slot is occupied by a DIFFERENT key.
+        // A suitable slot is one that is empty (-1) or deleted (-2).
+        // That is if continue loop if we have other than -1, -2, and key and the numbers are other that these three so increment the i and 
+        // check for next index. And as soon as we finds any one of -1, -2 or key then we can insert there after coming of loop.
+        while (hashTable[i] != -1 && hashTable[i] != -2 && hashTable[i] != key)
+        {
+            // Move to the next slot, wrapping around if necessary.
+            i = (i + 1) % hashSlots;
+        }
+
+        // If the key is already in the table, do nothing and return false (no duplicates allowed).
+        if (hashTable[i] == key)
+            return false;
+        else
+        {
+            // Insert the key into the found empty/deleted slot.
+            hashTable[i] = key;
+            // Increment the number of elements.
+            size++;
+            // Return true to indicate a successful insertion.
+            return true;
+        }
+        // Note: This last return is unreachable but is kept for logical completeness.
+    }
+
+    // --- Search Function ---
+    // Searches for a key in the hash table. Returns true if found, false otherwise.
+    bool search(int key)
+    {
+        // Calculate the initial hash index to start the search.
+        int h = hash(key);
+        int i = h;
+
+        // --- Linear Probing to find the key ---
+        // The loop continues as long as we haven't hit an empty slot (-1).
+        // An empty slot means the key cannot be further down the chain.
+        while (hashTable[i] != -1)
+        {
+            // If the key is found at the current slot, return true.
+            if (hashTable[i] == key)
+                return true;
+            
+            // If not found, move to the next slot (we must probe past deleted slots).
+            i = (i + 1) % hashSlots;
+            
+            // If we have probed the entire table and returned to the start,
+            // the key is not present. This prevents an infinite loop on a full table.
+            if (i == h)
+                return false;
+        }
+
+        // If the loop terminates because hashTable[i] == -1, the key was not found.
+        return false;
+    }
+
+    // --- Erase Function ---
+    // Deletes a key from the hash table. Returns true on success, false if key not found.
+    bool erase(int key)
+    {
+        // Calculate the initial hash index.
+        int h = hash(key);
+        int i = h;
+
+        // --- Linear Probing to find the key to delete ---
+        // Loop until we hit an empty slot (-1).
+        while (hashTable[i] != -1)
+        {
+            // If the key is found at the current slot...
+            if (hashTable[i] == key)
+            {
+                // ...mark the slot as "deleted" (-2).
+                // We DO NOT set it to -1, as that would break the probe chain for other keys.
+                hashTable[i] = -2;
+                // Note: We don't decrement `size` here, though some implementations do.
+                // Not decrementing `size` means the table can eventually become full of deleted markers.
+                return true;
+            }
+
+            // Move to the next slot.
+            i = (i + 1) % hashSlots;
+            
+            // If we have probed the entire table, the key is not present.
+            if (i == h)
+                return false;
+        }
+
+        // If the loop terminates because we hit an empty slot, the key was not found.
+        return false;
+    }
+};
+
+
+*/

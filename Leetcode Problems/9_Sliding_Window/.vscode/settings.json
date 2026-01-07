@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "algorithm": "cpp",
+        "climits": "cpp",
+        "atomic": "cpp"
+    }
+}

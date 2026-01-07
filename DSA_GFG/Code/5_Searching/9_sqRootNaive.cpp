@@ -1,0 +1,22 @@
+#include <iostream>
+using namespace std;
+
+int sqRootFloor(int x)
+{
+	int i = 1;
+
+    while ((i*i) <=x )
+        i++;
+    return i-1;
+}
+
+int main() {
+    
+
+   cout << sqRootFloor(15);
+
+	return 0;
+}
+
+// time : O(under root of x)
+// space O(1)

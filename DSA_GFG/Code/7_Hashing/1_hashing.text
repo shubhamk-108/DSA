@@ -1,0 +1,569 @@
+This file is large but please read it. If you read whole blog then you will surely understand
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Question : what is hashing 
+
+Answer:
+
+Hashing in data structures and algorithms (DSA) is a technique used to quickly store, access, and retrieve data using a special 
+mathematical function called a hash function. This function takes an input (the key) and converts it into a fixed-size value 
+(the hash or index), which determines where the data will be stored in a structure called a hash table.
+
+Key Points:
+Purpose: Hashing allows efficient search, insert, and delete operations, often achieving average-case constant time complexity 
+O(1), making it much faster than linear search in arrays or linked lists.
+
+Hash Table: The hash table uses the hashed value as an index to store key/value pairs, so operations can jump directly to the location of the 
+desired item instead of searching through all elements.
+
+How it Works: For each key, the hash function generates an index. If two different keys generate the same index (a collision), special 
+techniques like chaining or open addressing are used to resolve it.
+
+Applications: Commonly used for implementing dictionaries, sets, caches, database indexes, password storage, and much more.
+
+Examples: Assigning unique IDs to records (like roll numbers for students or catalog numbers for books), storing username-password pairs 
+in websites, or mapping dictionary words to their meanings
+
+Typical Hashing Workflow:
+Choose a key (e.g., a string or number).
+
+Pass the key through a hash function to generate an index.
+
+Store the value at the index in the hash table.
+
+For look-ups, hash the key again and directly access the indexed location for instant retrieval.
+
+Example:
+
+Scenario: Storing Phone Numbers
+Imagine you want to build a simple digital phonebook. You need to store people's names (the key) and their phone numbers (the value). 
+You want to be able to look up a phone number very quickly just by knowing the person's name.
+
+1. The Hash Table (The Storage)
+First, we create an empty array to serve as our hash table. Let's say we decide to make our array of size 10. These 10 slots (or "buckets") 
+are indexed from 0 to 9.
+
+Hash Table: [ , , , , , , , , , ]
+Indexes:    0 1 2 3 4 5 6 7 8 9
+
+2. The Hash Function (The Index Generator)
+Next, we need a hash function. This function will take a name (a string) and turn it into an index from 0 to 9. A very simple hash function could be:
+
+hash(name) = length of the name % 10
+
+This function calculates the length of the name and then uses the modulo operator (%) to get the remainder when divided by 10. This ensures the 
+result is always an integer between 0 and 9.
+
+3. Storing Entries (Insert Operation)
+Let's add a few contacts to our phonebook.
+
+Add "Bob" (Phone: 555-1234)
+
+Key: "Bob"
+
+Hash Calculation: length("Bob") % 10 -> 3 % 10 -> 3
+
+Store: We place "Bob"'s information at index 3 in our hash table.
+
+Hash Table: [ , , , {"Bob": "555-1234"}, , , , , , ]
+Indexes:    0 1 2 3                  4 5 6 7 8 9
+
+
+Add "Siri" (Phone: 555-5678)
+
+Key: "Siri"
+
+Hash Calculation: length("Siri") % 10 -> 4 % 10 -> 4
+
+Store: We place "Siri"'s information at index 4.
+
+Hash Table: [ , , , {"Bob": "555-1234"}, {"Siri": "555-5678"}, , , , , ]
+Indexes:    0 1 2 3                  4                  5 6 7 8 9
+
+
+4. Handling a Collision
+Now, let's try to add a new contact:
+
+Add "Lisa" (Phone: 555-8765)
+
+Key: "Lisa"
+
+Hash Calculation: length("Lisa") % 10 -> 4 % 10 -> 4
+
+Collision!: The index 4 is already occupied by "Siri".
+
+This is called a collision. A common way to solve this is called chaining. Instead of storing a single entry at each index, we store a 
+list (like a linked list) of entries.
+
+So, when we add "Lisa," we just add her to the list at index 4
+
+
+Hash Table:
+Index 0: []
+Index 1: []
+Index 2: []
+Index 3: [{"Bob": "555-1234"}]
+Index 4: [{"Siri": "555-5678"}, {"Lisa": "555-8765"}]  <-- Chaining in action
+Index 5: []
+...
+
+5. Retrieving Data (Search Operation)
+Now, how do you find "Lisa"'s phone number?
+
+Key: "Lisa"
+
+Hash Calculation: length("Lisa") % 10 -> 4. This immediately tells us to go to index 4.
+
+Search the Chain: We look at the list at index 4.
+
+Is the first entry "Lisa"? No, it's "Siri".
+
+Is the second entry "Lisa"? Yes. We found her!
+
+Result: We return her phone number: "555-8765".
+
+Notice we didn't have to scan the whole array. We went directly to the correct bucket and only had to check a small list.
+
+Why is this fast?
+Even with millions of contacts, a good hash function distributes them evenly across the hash table. When you search, you instantly 
+jump to the right bucket. As long as the chains (the lists at each index) remain short, the search is incredibly fast—close to constant time, 
+or O(1), on average. This is much faster than searching through an unsorted list one by one, which would be O(n).
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Question 2
+
+ok i get it but what is the use of storing like this because many people's name is from length 4 to 7 so it will be ununiformly distribute 
+and i dont think that it will be O(1) then suppose if we want to store 1 million peoples number then there is a possibility that 800000 
+people we be having name of length 4 to 7
+
+Answer:
+
+
+You've hit on the most critical point in hashing, and you are absolutely right. The simple example I gave (using the length of a name) is a bad 
+hash function precisely for the reason you identified: it fails to distribute the keys uniformly.
+
+If many names have lengths from 4 to 7, they will all map to indexes 4, 5, 6, and 7, creating long chains (or clusters) and degrading performance. 
+In that scenario, the time complexity would approach O(n), completely defeating the purpose of hashing.
+
+So, how do we solve this? The entire effectiveness of a hash table hinges on one thing: a good hash function.
+
+What Makes a Hash Function "Good"?
+A good hash function has one primary goal: uniform distribution. It should spread keys as evenly and randomly as possible across all available
+ indexes in the hash table, regardless of the input data patterns.
+
+Good hash functions achieve this by being more sophisticated than just length % 10. They are designed to ensure that even small changes in the 
+input key produce wildly different hash values. This minimizes the chance of two different keys producing the same hash.
+
+Examples of Better Hash Functions
+Instead of using the length, a better hash function for strings might involve the characters themselves. Here’s a conceptual example:
+
+1. Summing Character Values:
+A slightly better (but still not perfect) function could sum the ASCII values of the characters in the string and then take the modulo.
+
+hash("Bob") = (ASCII of 'B' + 'o' + 'b') % 10 = (66 + 111 + 98) % 10 = 275 % 10 = 5
+hash("Siri") = (ASCII of 'S' + 'i' + 'r' + 'i') % 10 = (83 + 105 + 114 + 105) % 10 = 407 % 10 = 7
+hash("Lisa") = (ASCII of 'L' + 'i' + 's' + 'a') % 10 = (76 + 105 + 115 + 97) % 10 = 393 % 10 = 3
+
+This already provides better distribution than just using the length.
+
+2. Polynomial Rolling Hash (A much better, standard approach):
+This is a very common and effective technique. The idea is to treat a string as a number in a different base.
+
+hash(s) = (s[0] * p^0 + s[1] * p^1 + s[2] * p^2 + ... ) % m
+
+Where:
+
+s[i] is the ASCII value of the i-th character.
+
+p is a prime number (e.g., 31 or 53). Using a prime helps in making the results more scattered.
+
+m is the size of the hash table (preferably also a prime number).
+
+This method is excellent because:
+
+It considers every character in the string.
+
+It considers the position of each character. ("stop" and "pots" will have different hashes).
+
+It produces a wide range of values, leading to a much more uniform distribution.
+
+What About the 1 Million People Scenario?
+You're right, with 1 million people, even a good hash function will produce collisions. It's statistically guaranteed. But that’s okay. The 
+strategy is not to eliminate collisions but to manage them effectively.
+
+Here's how it's handled in a real-world system:
+
+Use a Large Hash Table: You don't use a table of size 10 for 1 million entries. You'd use a much larger table, perhaps of size 1.5 to 2 million. 
+This is controlled by something called the load factor (number of entries / size of table). Keeping the load factor low (e.g., below 0.7) ensures 
+there's plenty of empty space, reducing the probability of collisions.
+
+Use a High-Quality Hash Function: As discussed, a robust function like a polynomial rolling hash ensures the 1 million names are spread out as 
+evenly as possible across the 2 million slots.
+
+Efficient Collision Resolution: Even with a great function and a large table, you'll still have some collisions. The linked lists (chains) at
+ each index will remain very short on average. If you have 1 million entries in a 2 million-slot table, the average chain length would be just 0.5.
+  Most searches would still be O(1) or O(2), which is practically constant time.
+
+Rehashing: If the number of entries grows too large and the load factor gets too high, the hash table can be automatically resized (e.g., 
+doubled in size), and all the entries are "rehashed" into the new, larger table. This is a one-time expensive operation that ensures future
+ operations remain fast
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+ Question 3
+What is hash function
+
+Ans:
+
+ A hash function is a mathematical function that takes an input of any size and converts it into a fixed-size string of characters, 
+ known as a hash value or hash code. Think of it as a "digital fingerprint" generator for data.
+
+In the context of data structures, its primary job is to compute an index for a given key, determining where in a hash table the 
+corresponding value should be stored or retrieved
+
+1. Division Method:
+
+This is the most simple and easiest method to generate a hash value. The hash function divides the value k by M and then uses the remainder obtained.
+
+Formula:
+
+h(K) = k mod M
+
+Here,
+
+k is the key value, and
+
+M is the size of the hash table.
+
+It is best suited that M is a prime number as that can make sure the keys are more uniformly distributed. The hash function is dependent upon the remainder of a division.
+
+Example:
+
+k = 12345
+
+M = 95
+
+h(12345) = 12345 mod 95
+
+= 90
+
+k = 1276
+
+M = 11
+
+h(1276) = 1276 mod 11
+
+= 0
+
+
+2. Mid Square Method:
+
+The mid-square method is a very good hashing method. It involves two steps to compute the hash value-
+
+Square the value of the key k i.e. k2
+
+Extract the middle r digits as the hash value.
+
+Formula:
+
+h(K) = h(k x k)
+
+Here,
+
+k is the key value.
+
+The value of r can be decided based on the size of the table.
+
+Example:
+
+Suppose the hash table has 100 memory locations. So r = 2 because two digits are required to map the key to the memory location.
+
+k = 60
+
+k x k = 60 x 60
+
+= 3600
+
+h(60) = 60
+
+The hash value obtained is 60
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Question 4:
+
+
+what is collision
+
+ANs:
+
+What is a Hash Collision?
+A hash collision occurs when a hash function generates the same index (or "hash value") for two or more different keys. Since a hash table slot 
+can typically hold only one element, a "collision" happens when a new element needs to be placed in a slot that is already occupied
+
+How to Handle Collisions
+Collision resolution techniques are strategies to manage and store all the items that hash to the same index. The two most common methods are 
+Separate Chaining and Open Addressing.
+
+1. Separate Chaining
+This is the most straightforward and widely used method. The idea is to make each slot in the hash table a pointer to another data structure, 
+typically a linked list, that can store multiple elements.
+
+How it works:
+
+When an element is inserted, its key is hashed to find the correct index in the table.
+
+If the slot at that index is empty, the element is placed there (often as the first node in a new linked list).
+
+If the slot is already occupied (a collision), the new element is simply added to the existing linked list at that index
+
+
+Example:
+Imagine a hash table of size 10 and a hash function hash(key) = key % 10.
+
+Insert 42: 42 % 10 = 2. We place 42 at index 2.
+
+Insert 77: 77 % 10 = 7. We place 77 at index 7.
+
+Insert 52 (Collision): 52 % 10 = 2. Index 2 is already occupied by 42. So, we "chain" 52 by adding it to the linked list at index 2.  
+
+Hash Table (size = 10) — Separate Chaining
++----+-------------------------------+
+| 0  | [ ]                           |
+| 1  | [ ]                           |
+| 2  | [•] --- > [k=12,v=A] --- > [k=22,v=B] --- > [k=32,v=C]
+| 3  | [ ]                           |
+| 4  | [•] --- > [k=19,v=Q]          |
+| 5  | [ ]                           |
+| 6  | [ ]                           |
+| 7  | [ ]                           |
+| 8  | [ ]                           |
+| 9  | [ ]                           |
++----+-------------------------------+
+
+Legend:
+[ ]  = empty bucket (no chain)
+[•]  = bucket head (start of chain)
+--- > = next pointer in the linked list (collision chain)
+[k=key,v=val] = node in the chain
+
+
+
+2. Open Addressing (or Closed Hashing)
+In open addressing, all elements are stored directly within the hash table itself. When a collision occurs, the algorithm systematically 
+searches for the next available (open) slot in the table to place the new element. This search process is called probing.
+
+There are several probing techniques, but the simplest is Linear Probing.
+
+How Linear Probing works:
+
+When an element is inserted, its key is hashed to find the initial index (h).
+
+If table[h] is empty, the element is placed there.
+
+If table[h] is occupied (a collision), the algorithm checks the next slot: table[h+1].
+
+If table[h+1] is also occupied, it tries table[h+2], and so on, wrapping around to the beginning of the table if necessary, until an 
+empty slot is found.
+
+Example:
+Using the same hash table and function (hash(key) = key % 10).
+
+Insert 42: 42 % 10 = 2. We place 42 at index 2.
+
+Insert 77: 77 % 10 = 7. We place 77 at index 7.
+
+Insert 52 (Collision): 52 % 10 = 2. Index 2 is occupied by 42.
+
+Probe to the next slot: index 3. It's empty!
+
+Place 52 at index 3.
+
+Example:
+
+Linear probing keeps all keys inside the table and, on collision, scans the next slots sequentially until an empty slot is found, 
+wrapping around if needed. The diagram below shows insertions with hash function h(k) = k % 10 for keys 42, 52, 62, 72, 77, and 17, 
+where collisions at index 2 and 7 are resolved by probing to subsequent indices.
+
+Hash Table (size = 10) — Open Addressing (Linear Probing)
++----+--------+
+| 0  | [    ] |
+| 1  | [    ] |
+| 2  | [21]   |  <-- h(42)=2 placed at 2
+| 3  | [1]   |  <-- h(52)=2 --- > 3
+| 4  | [11]   |  <-- h(62)=2 --- > 3 --- > 4
+| 5  |    |  <-- h(72)=2 --- > 3 --- > 4 --- > 5
+| 6  | [    ] |
+| 7  |    |  <-- h(77)=7 placed at 7
+| 8  | [22]   |  <-- h(17)=7 --- > 8
+| 9  | [    ] |
++----+--------+
+
+Probe paths (dashed):
+42: h=2
+52: h=2 --- > 3
+62: h=2 --- > 3 --- > 4
+72: h=2 --- > 3 --- > 4 --- > 5
+77: h=7
+17: h=7 --- > 8
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Question 5:
+what is linear probing and quadratic probing:
+
+ans:
+
+
+1. Linear Probing
+Linear probing is the simplest open addressing technique. When a collision happens at a given index, it checks the very next slot 
+in the table. 
+If that slot is also taken, it checks the next one, and so on, moving sequentially (linearly) until an empty slot is found.
+
+same as we seen in above question
+
+
+2. Quadratic Probing
+Quadratic probing is designed to solve the primary clustering problem of linear probing. Instead of stepping sequentially, 
+it uses a quadratic function to determine the size of the jumps for each probe.
+
+Probe Sequence:
+If the initial hash index is h, the probe sequence is:
+h, (h + 1^2), (h + 2^2), (h + 3^2), ...
+Which is: h, (h + 1), (h + 4), (h + 9), ... (all modulo the table size)
+
+Example:
+Using the same hash table and function.
+
+Insert 42: h(42) = 2. Slot 2 is empty. Place 42 there.
+
+Insert 52 (Collision): h(52) = 2. Slot 2 is occupied.
+
+Probe to (2 + 1^2) % 10 = 3. Slot 3 is empty. Place 52 there.
+
+Insert 62 (Collision): h(62) = 2. Slot 2 is occupied.
+
+Probe to (2 + 1^2) % 10 = 3. Slot 3 is also occupied.
+
+Probe to (2 + 2^2) % 10 = 6. Slot 6 is empty. Place 62 there.
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Question 6:
+
+What is double hashing
+
+Ans:
+
+Double hashing is a collision resolution technique used in open addressing hash tables. It is considered one of the most effective 
+methods because it minimizes the clustering issues that affect linear and quadratic probing.
+
+The core idea of double hashing is to use two different hash functions instead of one.
+
+First Hash Function (h1): This function determines the initial index where the key should be placed, just like in other hashing methods.
+
+Second Hash Function (h2): This function is only used when a collision occurs. It calculates a step size or offset. This step 
+size is then used to determine how far to jump in the table to find the next available slot.
+
+How Double Hashing Works
+If a collision occurs at an index calculated by h1(key), the probe sequence is generated by repeatedly adding the step size 
+from h2(key) until an empty slot is found.
+
+The formula for the probe sequence is:
+new_index = (h1(key) + i * h2(key)) % table_size
+
+Where:
+
+h1(key) is the result of the first hash function.
+
+h2(key) is the result of the second hash function (the step size).
+
+i is the iteration number of the probe, starting from 0, 1, 2, and so on.
+
+Key Difference from Linear and Quadratic Probing
+In linear probing, the step size is always 1.
+
+In quadratic probing, the step size grows quadratically (1, 4, 9, ...).
+
+In double hashing, the step size is determined by the key itself, via the second hash function.
+
+This means that if two different keys (k1 and k2) initially hash to the same index, their probe sequences will be different 
+because h2(k1) and h2(k2) will likely produce different step sizes. This is how double hashing effectively eliminates both 
+primary and secondary clustering.
+
+Example
+Let's use a hash table of size 13.
+Our hash functions will be:
+
+h1(key) = key % 13
+
+h2(key) = 11 - (key % 11) (A common choice for h2 is PRIME - (key % PRIME), where PRIME is a prime smaller than the table size. 
+This helps ensure the step size is never zero and covers more of the table.)
+
+Let's insert the keys 18, 44, and 57:
+
+Insert 18:
+
+h1(18) = 18 % 13 = 5.
+
+Slot 5 is empty. Place 18 there.
+
+Insert 44:
+
+h1(44) = 44 % 13 = 5. Collision! Slot 5 is occupied by 18.
+
+We now need the second hash function to find the step size.
+
+h2(44) = 11 - (44 % 11) = 11 - 0 = 11. The step size is 11.
+
+First probe (i=1): (5 + 1 * 11) % 13 = 16 % 13 = 3.
+
+Slot 3 is empty. Place 44 there.
+
+Insert 57:
+
+h1(57) = 57 % 13 = 5. Collision! Slot 5 is occupied.
+
+Calculate the step size for this key.
+
+h2(57) = 11 - (57 % 11) = 11 - 2 = 9. The step size is 9.
+
+First probe (i=1): (5 + 1 * 9) % 13 = 14 % 13 = 1.
+
+Slot 1 is empty. Place 57 there.
+
+Final Hash Table:
+
+Index 0: [ ]
+Index 1: [57]  <-- Placed here after collision
+Index 2: [ ]
+Index 3: [44]  <-- Placed here after collision
+Index 4: [ ]
+Index 5: [10]  <-- Initial position for all three
+...
+
+suppose for 57 slot 1 is already occupied then would this First probe (i=1): (5 + 1 * 9) % 13 = 14 % 13 = 1 be second 
+probe (i=2): (5 + 2 * 9) % 13  this time?
+Yes, you are exactly right. Your understanding is perfect.
