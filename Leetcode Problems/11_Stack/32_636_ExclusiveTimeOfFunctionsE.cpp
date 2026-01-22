@@ -1,0 +1,221 @@
+/*
+On a single-threaded CPU, we execute a program containing n functions. Each function has a unique ID between 0 and n-1.
+
+Function calls are stored in a call stack: when a function call starts, its ID is pushed onto the stack, and when a function call ends, its ID is popped off the stack. The function whose ID is at the top of the stack is the current function being executed. Each time a function starts or ends, we write a log with the ID, whether it started or ended, and the timestamp.
+
+You are given a list logs, where logs[i] represents the ith log message formatted as a string "{function_id}:{"start" | "end"}:{timestamp}". For example, "0:start:3" means a function call with function ID 0 started at the beginning of timestamp 3, and "1:end:2" means a function call with function ID 1 ended at the end of timestamp 2. Note that a function can be called multiple times, possibly recursively.
+
+A function's exclusive time is the sum of execution times for all function calls in the program. For example, if a function is called twice, one call executing for 2 time units and another call executing for 1 time unit, the exclusive time is 2 + 1 = 3.
+
+Return the exclusive time of each function in an array, where the value at the ith index represents the exclusive time for the function with ID i.
+
+
+Diagram important to understand.
+
+Example 1:
+
+
+Input: n = 2, logs = ["0:start:0","1:start:2","1:end:5","0:end:6"]
+Output: [3,4]
+Explanation:
+Function 0 starts at the beginning of time 0, then it executes 2 for units of time and reaches the end of time 1.
+Function 1 starts at the beginning of time 2, executes for 4 units of time, and ends at the end of time 5.
+Function 0 resumes execution at the beginning of time 6 and executes for 1 unit of time.
+So function 0 spends 2 + 1 = 3 units of total time executing, and function 1 spends 4 units of total time executing.
+Example 2:
+
+Input: n = 1, logs = ["0:start:0","0:start:2","0:end:5","0:start:6","0:end:6","0:end:7"]
+Output: [8]
+Explanation:
+Function 0 starts at the beginning of time 0, executes for 2 units of time, and recursively calls itself.
+Function 0 (recursive call) starts at the beginning of time 2 and executes for 4 units of time.
+Function 0 (initial call) resumes execution then immediately calls itself again.
+Function 0 (2nd recursive call) starts at the beginning of time 6 and executes for 1 unit of time.
+Function 0 (initial call) resumes execution at the beginning of time 7 and executes for 1 unit of time.
+So function 0 spends 2 + 4 + 1 + 1 = 8 units of total time executing.
+Example 3:
+
+Input: n = 2, logs = ["0:start:0","0:start:2","0:end:5","1:start:6","1:end:6","0:end:7"]
+Output: [7,1]
+Explanation:
+Function 0 starts at the beginning of time 0, executes for 2 units of time, and recursively calls itself.
+Function 0 (recursive call) starts at the beginning of time 2 and executes for 4 units of time.
+Function 0 (initial call) resumes execution then immediately calls function 1.
+Function 1 starts at the beginning of time 6, executes 1 unit of time, and ends at the end of time 6.
+Function 0 resumes execution at the beginning of time 6 and executes for 2 units of time.
+So function 0 spends 2 + 4 + 1 = 7 units of total time executing, and function 1 spends 1 unit of total time executing.
+*/
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <stack>
+#include <algorithm>
+#include <climits>
+using namespace std;
+
+class Solution
+{
+public:
+    vector<int> exclusiveTime(int n, vector<string> &logs)
+    {
+        stack<vector<int>> st;
+        vector<int> res(n);
+        for (int i = 0; i < logs.size(); i++)
+        {
+            int startColonIdx = logs[i].find(':');
+            int id = stoi(logs[i].substr(0, startColonIdx));
+            int lastColonIdx = logs[i].rfind(':');
+            string status = logs[i].substr(startColonIdx + 1, lastColonIdx - startColonIdx - 1);
+            int time = stoi(logs[i].substr(lastColonIdx + 1));
+            int childTime = 0;
+
+            if (status == "start")
+            {
+                st.push({id, time, childTime});
+            }
+            else
+            {
+                int startTime = st.top()[1];
+                int endTime = time;
+                childTime = st.top()[2];
+                int totalTime = endTime - startTime + 1;
+                int exclusive = totalTime - childTime;
+                st.pop();
+                res[id] += exclusive;
+
+                if (!st.empty())
+                    st.top()[2] += totalTime;
+            }
+        }
+        return res;
+    }
+};
+int main()
+{
+    Solution sol;
+    vector<string> v = {"0:start:0", "1:start:2", "1:end:5", "0:end:6"};
+    vector<int> res = sol.exclusiveTime(2, v);
+    for (auto x : res)
+        cout << x << " ";
+    return 0;
+}
+
+//___________________________________________________________________________________________________________________________________________
+// Timespace
+//___________________________________________________________________________________________________________________________________________
+
+/*
+Time Complexity
+O(n)
+Each log is processed once.
+Each function frame is pushed and popped once.
+4️⃣ Space Complexity
+O(n
+Stack can hold up to n frames in the worst case (deep recursion).
+
+*/
+
+//___________________________________________________________________________________________________________________________________________
+// Approach
+//___________________________________________________________________________________________________________________________________________
+
+/*
+
+
+Idea:
+We simulate the execution of functions using a stack and explicitly track how much time each function spends inside its child calls.
+Key observations
+Only one function executes at any moment.
+When a function calls another function, it is paused.
+A function’s exclusive time =
+total time − time spent in child calls.
+Strategy
+Use a stack where each entry stores:
+function id
+start time
+total time spent in child calls (childTime)
+For each log:
+If it’s a "start" log, push a new frame onto the stack.
+If it’s an "end" log:
+Compute total execution time.
+Subtract childTime to get exclusive time.
+Add exclusive time to result.
+Add this function’s total time to its parent’s childTime.
+This ensures parents correctly account for time spent while children execute.
+
+*/
+
+//___________________________________________________________________________________________________________________________________________
+// Code
+//___________________________________________________________________________________________________________________________________________
+
+/*
+
+class Solution
+{
+public:
+    vector<int> exclusiveTime(int n, vector<string> &logs)
+    {
+        // Stack stores: {function id, start time, child time}
+        stack<vector<int>> st;
+
+        // Result array for exclusive time of each function
+        vector<int> res(n, 0);
+
+        for (int i = 0; i < logs.size(); i++)
+        {
+            // Parse log
+            int startColonIdx = logs[i].find(':');
+            int id = stoi(logs[i].substr(0, startColonIdx));
+
+            int lastColonIdx = logs[i].rfind(':');
+            string status = logs[i].substr(
+                startColonIdx + 1,
+                lastColonIdx - startColonIdx - 1
+            );
+            int time = stoi(logs[i].substr(lastColonIdx + 1));
+
+            if (status == "start")
+            {
+                // Push new function frame
+                st.push({id, time, 0});
+            }
+            else
+            {
+                // End of current function
+                int startTime = st.top()[1];
+                int childTime = st.top()[2];
+
+                int totalTime = time - startTime + 1;
+                int exclusive = totalTime - childTime;
+
+                st.pop();
+
+                // Add exclusive time to result
+                res[id] += exclusive;
+
+                // Add total time to parent's childTime
+                if (!st.empty())
+                    st.top()[2] += totalTime;
+            }
+        }
+        return res;
+    }
+};
+
+
+
+*/
+
+//___________________________________________________________________________________________________________________________________________
+// Pattern used
+//___________________________________________________________________________________________________________________________________________
+
+/*
+
+Pattern Used
+🔹 Stack Simulation with Time Accounting
+*/
