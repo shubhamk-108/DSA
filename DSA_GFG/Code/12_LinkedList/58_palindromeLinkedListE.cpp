@@ -42,7 +42,7 @@ bool isPalindrome(Node *head)
     while (fast->next != NULL && fast->next->next != NULL)
     {
         slow = slow->next;
-        fast = fast->next;
+        fast = fast->next->next;
     }
 
     Node *reversed = reverseList(slow->next);
