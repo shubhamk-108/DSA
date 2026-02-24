@@ -1,98 +1,95 @@
+/*
+A linked list of length n is given such that each node contains an additional random pointer, which could point to any node in the list, or null.
 
-// problem statement:
-//  Given a head of linked list where each node has two links: next pointer pointing to the next node and random pointer to any random node in the list.
-//  Create a clone of this linked list. YOu have to create puerly new linked list means the addresses of both the links will be different.
+Construct a deep copy of the list. The deep copy should consist of exactly n brand new nodes, where each new node has its value set to the value of its corresponding original node. Both the next and random pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state. None of the pointers in the new list should point to nodes in the original list.
 
-#include <bits/stdc++.h>
+For example, if there are two nodes X and Y in the original list, where X.random --> Y, then for the corresponding two nodes x and y in the copied list, x.random --> y.
+
+Return the head of the copied linked list.
+
+The linked list is represented in the input/output as a list of n nodes. Each node is represented as a pair of [val, random_index] where:
+
+val: an integer representing Node.val
+random_index: the index of the node (range from 0 to n-1) that the random pointer points to, or null if it does not point to any node.
+Your code will only be given the head of the original linked list.
+
+Input: head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+Output: [[7,null],[13,0],[11,4],[10,2],[1,0]]
+
+*/
+
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+
 using namespace std;
 
-struct Node
+class Node
 {
-	int data;
-	Node *next, *random;
-	Node(int x)
-	{
-		data = x;
-		next = random = NULL;
-	}
+public:
+    int val;
+    Node *next;
+    Node *random;
+
+    Node(int _val)
+    {
+        val = _val;
+        next = NULL;
+        random = NULL;
+    }
 };
 
-void print(Node *start)
+class Solution
 {
-	Node *ptr = start;
-	while (ptr)
-	{
-		cout << "Data = " << ptr->data << ", Random  = " << ptr->random->data << endl;
-		ptr = ptr->next;
-	}
-}
+public:
+    Node *copyRandomList(Node *head)
+    {
+        if (head == nullptr)
+            return nullptr;
 
-Node *clone(Node *head)
-{
-	Node *curr = head;
+        Node *curr = head;
 
-	while (curr != NULL)
-	{
-		Node *NextNode = curr->next;
-		curr->next = new Node(curr->data);
-		curr->next->next = NextNode;
-		curr = NextNode;
-	}
+        while (curr != NULL)
+        {
+            Node *NextNode = curr->next;
+            curr->next = new Node(curr->val);
+            curr->next->next = NextNode;
+            curr = NextNode;
+        }
 
-	curr = head;
-	while (curr != NULL && curr->next != NULL)
-	{
-		if (curr->random == NULL)
-			curr->next->random = nullptr;
-		else
-			curr->next->random = curr->random->next;
-		curr = curr->next->next;
-	}
+        curr = head;
+        while (curr != NULL && curr->next != NULL)
+        {
+            if (curr->random == NULL)
+                curr->next->random = nullptr;
+            else
+                curr->next->random = curr->random->next;
+            curr = curr->next->next;
+        }
 
-	curr = head;
-	Node *cloneHead = head->next;
-	Node *curr2 = cloneHead;
+        curr = head;
+        Node *cloneHead = head->next;
 
-	while (curr != nullptr && curr->next != nullptr && curr2 != nullptr && curr2->next != nullptr)
-	{
-		curr->next = curr->next->next;
-		curr2->next = curr2->next->next;
-		curr = curr->next;
-		curr2 = curr2->next;
-	}
-	return cloneHead;
-}
+        while (curr)
+        {
+            Node *copy = curr->next;
+            curr->next = copy->next;
+            
+            if(copy->next)
+            copy->next = copy->next->next;
 
-int main()
-{
-	Node *head = new Node(10);
-	head->next = new Node(5);
-	head->next->next = new Node(20);
-	head->next->next->next = new Node(15);
-	head->next->next->next->next = new Node(20);
-
-	head->random = head->next->next;
-	head->next->random = head->next->next->next;
-	head->next->next->random = head;
-	head->next->next->next->random = head->next->next;
-	head->next->next->next->next->random = head->next->next->next;
-
-	cout << "Original list : \n";
-	print(head);
-
-	cout << "\nCloned list : \n";
-	Node *cloned_list = clone(head);
-	print(cloned_list);
-
-	return 0;
-}
+            curr=curr->next;
+        }
+        return cloneHead;
+    }
+};
 
 //___________________________________________________________________________________________________________________________________________
 // Timespace
 //___________________________________________________________________________________________________________________________________________
 
 /*
-Time Complexity	
+Time Complexity
 Step 1: O(n)
 Step 2: O(n)
 Step 3: O(n)
@@ -136,49 +133,84 @@ Restore the original list and extract the cloned list by fixing next pointers.
 //___________________________________________________________________________________________________________________________________________
 
 /*
-
-Node *clone(Node *head)
+class Solution
 {
-    Node *curr = head;
-
-    // STEP 1: Insert cloned nodes after each original node
-    while (curr != NULL)
+public:
+    Node *copyRandomList(Node *head)
     {
-        Node *NextNode = curr->next;          // Save original next
-        curr->next = new Node(curr->data);    // Create clone
-        curr->next->next = NextNode;          // Link clone to next original
-        curr = NextNode;                      // Move to next original node
+        // Edge case: empty list
+        if (head == nullptr)
+            return nullptr;
+
+        Node *curr = head;
+
+        // -------------------------------------------------
+        // STEP 1: Interleave copied nodes with originals
+        // -------------------------------------------------
+        // For each original node:
+        // Create its copy and insert it right after the original node.
+        //
+        // Example:
+        // A -> B -> C
+        // becomes
+        // A -> A' -> B -> B' -> C -> C'
+        //
+        while (curr != NULL)
+        {
+            Node *NextNode = curr->next;          // Store next original node
+            curr->next = new Node(curr->val);     // Create copy node
+            curr->next->next = NextNode;          // Link copy to next original
+            curr = NextNode;                      // Move to next original node
+        }
+
+        // -------------------------------------------------
+        // STEP 2: Assign random pointers to copied nodes
+        // -------------------------------------------------
+        // If original node's random = R,
+        // then copy's random = R->next
+        // because R->next is the copied version of R.
+        //
+        curr = head;
+        while (curr != NULL && curr->next != NULL)
+        {
+            if (curr->random == NULL)
+                curr->next->random = nullptr;   // If original random is null
+            else
+                curr->next->random = curr->random->next; // Assign copied random
+
+            curr = curr->next->next;  // Move to next original node
+        }
+
+        // -------------------------------------------------
+        // STEP 3: Separate original list and copied list
+        // -------------------------------------------------
+        // Current structure:
+        // A -> A' -> B -> B' -> C -> C'
+        //
+        // We must:
+        // 1. Restore original list
+        // 2. Extract copied list
+        //
+        curr = head;
+        Node *cloneHead = head->next;  // Head of copied list
+
+        while (curr)
+        {
+            Node *copy = curr->next;   // Copied node
+
+            curr->next = copy->next;   // Restore original list link
+
+            // Fix copied list link (if next exists)
+            if (copy->next)
+                copy->next = copy->next->next;
+
+            curr = curr->next;         // Move to next original node
+        }
+
+        // Return deep copied list head
+        return cloneHead;
     }
-
-    // STEP 2: Set random pointers of cloned nodes
-    curr = head;
-    while (curr != NULL && curr->next != NULL)
-    {
-        if (curr->random == NULL)
-            curr->next->random = nullptr;     // Clone random is null
-        else
-            curr->next->random = curr->random->next; // Point to clone of random
-
-        curr = curr->next->next;              // Jump to next original
-    }
-
-    // STEP 3: Separate original and cloned lists
-    curr = head;
-    Node *cloneHead = head->next;              // Head of cloned list
-    Node *curr2 = cloneHead;
-
-    while (curr != nullptr && curr->next != nullptr &&
-           curr2 != nullptr && curr2->next != nullptr)
-    {
-        curr->next = curr->next->next;        // Restore original next
-        curr2->next = curr2->next->next;      // Fix clone next
-
-        curr = curr->next;                    // Move originals
-        curr2 = curr2->next;                  // Move clones
-    }
-
-    return cloneHead;
-}
+};
 
 
 
